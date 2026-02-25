@@ -2,8 +2,28 @@
 
 ![log seeking](preview.gif "Logo Title Text 1")
 
- This is a Javascript based log viewer for Mavlink telemetry and dataflash logs.
- [Live demo here](http://plot.ardupilot.org).
+This is a Javascript based log viewer for Mavlink telemetry and dataflash logs.
+[Live demo here](http://plot.ardupilot.org).
+
+## Chatbot Feature — Agent Building Focus
+
+This fork adds an **agentic chatbot** for MAVLink flight log analysis. The implementation emphasizes **Agent Building**: following agentic standards and use of state-of-the-art tools.
+
+**Highlights:**
+- **Conversation state** — Multi-turn dialog with persistent context
+- **Proactive clarification** — Asks for more info when data is insufficient
+- **Dynamic data retrieval** — Infers message types from natural language
+- **Flexible reasoning** — LLM reasons over telemetry + anomaly hints (no hardcoded rules)
+- **Multi-provider** — OpenAI or Anthropic via `LLM_PROVIDER`
+
+See **[AGENT_BUILDING.md](AGENT_BUILDING.md)** for design details. Quick start: [CHATBOT_FEATURE.md](CHATBOT_FEATURE.md).
+
+**Run the chatbot:**
+```bash
+pip install -r requirements.txt
+uvicorn backend.presentation.api.main:app --reload
+# Open http://127.0.0.1:8000/ui
+```
 
 ## Build Setup
 

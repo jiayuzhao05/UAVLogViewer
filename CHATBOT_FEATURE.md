@@ -1,10 +1,10 @@
-# Chatbot Feature Implementation Guide
+# Chatbot Feature
 
 ## Architecture
 
-Built with **DDD** and **MVC** for low coupling and easy extensibility.
+Built with DDD and MVC for low coupling and easy extensibility.
 
-### Layering
+### Layer
 
 ```
 backend/
@@ -51,7 +51,7 @@ backend/
 - Context injection to LLM for flexible reasoning (not hard-coded rules)
 - Cached per file_id to avoid recomputation
 
-## Code Examples
+## Code Example
 
 ### Upload a file
 ```python
@@ -72,12 +72,12 @@ print(f"file id: {file_id}")
 ```python
 import requests
 
-# First question (starts a new conversation)
+# First question
 response = requests.post(
     "http://localhost:8000/api/chat",
     json={
         "question": "What was the highest altitude reached during the flight?",
-        "file_id": "your_file_id_here"
+        "file_id": "your_file_id"
     }
 )
 
@@ -196,7 +196,7 @@ Response:
 
 Create `.env`:
 ```env
-# LLM (choose one)
+# LLM
 OPENAI_API_KEY=your_openai_key
 # or
 ANTHROPIC_API_KEY=your_anthropic_key
@@ -221,9 +221,10 @@ pip install -r requirements.txt
 
 # start service
 uvicorn backend.presentation.api.main:app --reload
+
 ```
 
-## UI (demo)
+## UI
 - Served at `/ui`
 - Upload progress bar, parsed message count, anomaly summary card
 - Chat bubbles with source tags, clarification prompts, and copyable conversation_id

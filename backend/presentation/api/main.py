@@ -1,4 +1,11 @@
 """FastAPI main application"""
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load .env from project root (parent of backend/)
+_env_path = Path(__file__).resolve().parents[3] / ".env"
+load_dotenv(_env_path)
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from backend.presentation.controllers.chat_controller import ChatController

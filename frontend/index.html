@@ -132,7 +132,8 @@
                     </label>
                     <span id="selectedFile" class="small" style="display:block;margin-top:6px;color:#666;">No file chosen</span>
                     <button id="uploadBtn">Upload</button>
-                    <button id="loadSampleBtn" class="small" style="margin-left:8px;">Load sample (.tlog)</button>
+                    <button id="loadSampleTlogBtn" class="small" style="margin-left:8px;">Load sample (.tlog)</button>
+                    <button id="loadSampleBinBtn" class="small" style="margin-left:4px;">Load sample (.bin)</button>
                     <div class="progress">
                         <div class="progress-bar" id="progressBar"></div>
                     </div>
@@ -188,7 +189,8 @@
             );
             const copyConv = document.getElementById("copyConv");
             const selectedFileSpan = document.getElementById("selectedFile");
-            const loadSampleBtn = document.getElementById("loadSampleBtn");
+            const loadSampleTlogBtn = document.getElementById("loadSampleTlogBtn");
+            const loadSampleBinBtn = document.getElementById("loadSampleBinBtn");
 
             let fileId = null;
             let conversationId = null;
@@ -294,24 +296,28 @@
                 await doUpload(file);
             });
 
-            loadSampleBtn.addEventListener("click", async () => {
-                loadSampleBtn.disabled = true;
-                uploadStatus.textContent = "Loading sample file...";
+            async function loadSample(format) {
+                const btn = format === "bin" ? loadSampleBinBtn : loadSampleTlogBtn;
+                const filename = format === "bin" ? "sample_flight.bin" : "sample_flight.tlog";
+                btn.disabled = true;
+                uploadStatus.textContent = `Loading sample ${format}...`;
                 try {
-                    const res = await fetch("/api/sample-file");
+                    const res = await fetch(`/api/sample-file?format=${format}`);
                     if (!res.ok) {
                         uploadStatus.textContent = "Sample file not found.";
                         return;
                     }
                     const blob = await res.blob();
-                    const file = new File([blob], "sample_flight.tlog", { type: "application/octet-stream" });
+                    const file = new File([blob], filename, { type: "application/octet-stream" });
                     await doUpload(file);
                 } catch (e) {
                     uploadStatus.textContent = "Failed to load sample: " + (e.message || "Unknown error");
                 } finally {
-                    loadSampleBtn.disabled = false;
+                    btn.disabled = false;
                 }
-            });
+            }
+            loadSampleTlogBtn.addEventListener("click", () => loadSample("tlog"));
+            loadSampleBinBtn.addEventListener("click", () => loadSample("bin"));
 
             async function loadSummary() {
                 if (!fileId) {

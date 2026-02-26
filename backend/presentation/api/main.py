@@ -8,6 +8,7 @@ load_dotenv(_env_path)
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from backend.presentation.controllers.chat_controller import ChatController
 from backend.presentation.dtos.chat_dto import ChatRequest, ChatResponse, FileUploadResponse
 from backend.infrastructure.storage.memory_repositories import (
@@ -109,6 +110,15 @@ async def upload_file(file: UploadFile = File(...)):
 async def health():
     """Health check"""
     return {"status": "healthy"}
+
+
+@app.get("/api/sample-file")
+async def sample_file():
+    """Serve the sample flight log for one-click load."""
+    sample_path = Path(__file__).resolve().parents[3] / "examples" / "sample_flight.tlog"
+    if not sample_path.exists():
+        raise HTTPException(status_code=404, detail="Sample file not found")
+    return FileResponse(sample_path, filename="sample_flight.tlog")
 
 
 @app.get("/api/telemetry/summary/{file_id}")

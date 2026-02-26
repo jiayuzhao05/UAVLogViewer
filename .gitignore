@@ -77,3 +77,6 @@ fabric.properties
 
 .env
 .env.*
+
+# Chatbot uploads (do not store user data in git)
+uploads/

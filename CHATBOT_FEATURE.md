@@ -214,6 +214,16 @@ UPLOAD_DIR=./uploads
 
 Switch provider by changing `LLM_PROVIDER` and supplying the corresponding API key/model.
 
+## Sample Flight Log
+
+**Download a sample:**
+```bash
+python examples/download_sample_bin.py
+```
+This downloads `vtol.tlog` from ArduPilot (same sample as plot.ardupilot.org) to `examples/sample_flight.tlog`.
+
+**Supported formats:** `.bin` (DataFlash) and `.tlog` (MAVLink telemetry). Both are parsed by pymavlink.
+
 ## Run
 ```bash
 # install deps

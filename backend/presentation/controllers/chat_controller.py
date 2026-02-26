@@ -1,5 +1,5 @@
 """Chat controller"""
-from fastapi import UploadFile, File
+from fastapi import UploadFile, File, HTTPException
 from typing import Optional
 import uuid
 import os
@@ -34,7 +34,7 @@ class ChatController:
     
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """
-        handle chat request
+        Handle chat request
         
         Args:
             request: chat request
@@ -42,6 +42,11 @@ class ChatController:
         Returns:
             chat response
         """
+        if not request.file_id and not request.conversation_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Either file_id or conversation_id is required. Please upload a flight log first.",
+            )
         result = await self.chat_service.ask_question(
             question=request.question,
             conversation_id=request.conversation_id,
@@ -59,7 +64,7 @@ class ChatController:
     
     async def upload_file(self, file: UploadFile = File(...)) -> FileUploadResponse:
         """
-        uplaod .bin document
+        Upload .bin document
         
         Args:
             file: updated file
@@ -67,12 +72,12 @@ class ChatController:
         Returns:
             upload response
         """
-        # verify file type
-        if not file.filename.endswith('.bin'):
-            return FileUploadResponse(
-                file_id="",
-                filename=file.filename or "",
-                message="only support.bin file",
+        # verify file type (.bin or .tlog - both parseable by pymavlink)
+        fn = (file.filename or "").lower()
+        if not fn or not (fn.endswith(".bin") or fn.endswith(".tlog")):
+            raise HTTPException(
+                status_code=400,
+                detail="Only .bin or .tlog MAVLink flight log files are supported",
             )
         
         # generate file ID
@@ -126,9 +131,8 @@ class ChatController:
             if os.path.exists(file_path):
                 os.remove(file_path)
             
-            return FileUploadResponse(
-                file_id="",
-                filename=file.filename or "",
-                message=f"File parsing failed: {str(e)}",
+            raise HTTPException(
+                status_code=400,
+                detail=f"File parsing failed: {str(e)}",
             )
 

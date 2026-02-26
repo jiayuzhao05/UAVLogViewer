@@ -113,12 +113,18 @@ async def health():
 
 
 @app.get("/api/sample-file")
-async def sample_file():
-    """Serve the sample flight log for one-click load."""
-    sample_path = Path(__file__).resolve().parents[3] / "examples" / "sample_flight.tlog"
+async def sample_file(format: str = "tlog"):
+    """Serve the sample flight log for one-click load. format=tlog or bin."""
+    root = Path(__file__).resolve().parents[3] / "examples"
+    if format == "bin":
+        sample_path = root / "sample_flight.bin"
+        filename = "sample_flight.bin"
+    else:
+        sample_path = root / "sample_flight.tlog"
+        filename = "sample_flight.tlog"
     if not sample_path.exists():
         raise HTTPException(status_code=404, detail="Sample file not found")
-    return FileResponse(sample_path, filename="sample_flight.tlog")
+    return FileResponse(sample_path, filename=filename)
 
 
 @app.get("/api/telemetry/summary/{file_id}")

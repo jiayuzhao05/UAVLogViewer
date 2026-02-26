@@ -23,6 +23,9 @@ AUTOTEST_BIN_URLS = [
     "https://autotest.ardupilot.org/Copter-common-00000001.BIN",
 ]
 
+# Reliable .bin from ArduPilot_binParser (GitHub, ~12MB)
+BIN_GITHUB_URL = "https://raw.githubusercontent.com/Crazy-Al/ArduPilot_binParser/main/Examples/ExampleBinFiles/00000009.BIN"
+
 OUTPUT_DIR = Path(__file__).parent
 
 
@@ -30,6 +33,18 @@ def download_sample(prefer_bin=False):
     """Download a sample flight log. Set prefer_bin=True to get .bin first."""
     # 1. Try .BIN first if requested
     if prefer_bin:
+        # Try reliable GitHub .bin first
+        try:
+            print(f"Downloading .bin: {BIN_GITHUB_URL}")
+            r = requests.get(BIN_GITHUB_URL, timeout=60)
+            if r.status_code == 200 and len(r.content) > 100:
+                out = OUTPUT_DIR / "sample_flight.bin"
+                out.write_bytes(r.content)
+                print(f"✓ Downloaded to {out}")
+                print(f"  Size: {len(r.content):,} bytes")
+                return True
+        except Exception as e:
+            print(f"  Failed: {e}")
         for url in AUTOTEST_BIN_URLS:
             try:
                 print(f"Downloading .bin: {url}")

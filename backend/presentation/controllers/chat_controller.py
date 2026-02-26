@@ -1,4 +1,5 @@
 """Chat controller"""
+import asyncio
 from fastapi import UploadFile, File, HTTPException
 from typing import Optional
 import uuid
@@ -83,15 +84,17 @@ class ChatController:
         # generate file ID
         file_id = str(uuid.uuid4())
         file_path = os.path.join(self.upload_dir, f"{file_id}.bin")
-        
-        # save file
-        async with aiofiles.open(file_path, 'wb') as f:
-            content = await file.read()
-            await f.write(content)
-        
-        # Parse file
+        content = b""
+
         try:
-            parsed_data = self.parser.parse(file_path)
+            # save file
+            async with aiofiles.open(file_path, 'wb') as f:
+                content = await file.read()
+                await f.write(content)
+
+            # Parse file (run in thread pool - CPU-bound, can take 30+ sec for large .bin)
+            loop = asyncio.get_running_loop()
+            parsed_data = await loop.run_in_executor(None, self.parser.parse, file_path)
             parsed_messages = parsed_data.get("metadata", {}).get(
                 "total_messages", len(parsed_data.get("messages", []))
             )
@@ -129,10 +132,12 @@ class ChatController:
         except Exception as e:
             # Clean up file on failure
             if os.path.exists(file_path):
-                os.remove(file_path)
-            
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
             raise HTTPException(
                 status_code=400,
-                detail=f"File parsing failed: {str(e)}",
+                detail=f"Upload or parsing failed: {str(e)}",
             )
 

@@ -60,18 +60,20 @@ class MAVLinkParser:
         }
     
     def _message_to_dict(self, msg) -> Dict:
-        """Convert a MAVLink message to a dictionary."""
+        """Convert a MAVLink or DataFlash message to a dictionary."""
+        # DataFlash (DFMessage) uses get_fieldnames(); MAVLink uses fieldnames
+        if hasattr(msg, "to_dict") and callable(getattr(msg, "to_dict")):
+            return msg.to_dict()
+        fields = getattr(msg, "fieldnames", None) or (
+            list(msg.get_fieldnames()) if hasattr(msg, "get_fieldnames") else []
+        )
         result = {}
-        
-        # Iterate all fields on the message
-        for field in msg.fieldnames:
+        for field in fields:
             value = getattr(msg, field, None)
-            # Handle special types
-            if hasattr(value, '__dict__'):
+            if hasattr(value, "__dict__") and not isinstance(value, (str, int, float, bool)):
                 result[field] = str(value)
             else:
                 result[field] = value
-        
         return result
     
     def extract_key_metrics(self, messages: List[Dict]) -> Dict:

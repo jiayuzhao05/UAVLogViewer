@@ -9,11 +9,15 @@ from backend.infrastructure.llm.llm_client import ILLMClient
 class OpenAIClient(ILLMClient):
     """OpenAI client implementation"""
 
-    def __init__(self, api_key: Optional[str] = None):
+    def __init__(self, api_key: Optional[str] = None, base_url: Optional[str] = None):
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY is required")
-        self.client = AsyncOpenAI(api_key=self.api_key)
+        self.base_url = base_url or os.getenv("OPENAI_BASE_URL")
+        self.client = AsyncOpenAI(
+            api_key=self.api_key,
+            base_url=self.base_url or None,
+        )
         self.model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
     async def chat(

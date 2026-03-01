@@ -48,11 +48,17 @@ class ChatController:
                 status_code=400,
                 detail="Either file_id or conversation_id is required. Please upload a flight log first.",
             )
-        result = await self.chat_service.ask_question(
+        try:
+            result = await self.chat_service.ask_question(
             question=request.question,
             conversation_id=request.conversation_id,
             file_id=request.file_id,
-        )
+            )
+        except Exception as e:
+            raise HTTPException(
+            status_code=500,
+            detail=f"Chat request failed: {str(e)}",
+            )
         
         return ChatResponse(
             answer=result.answer,
@@ -87,10 +93,14 @@ class ChatController:
         content = b""
 
         try:
-            # save file
+            # save file (read in chunks to avoid holding full body in memory; client disconnect → clearer error)
             async with aiofiles.open(file_path, 'wb') as f:
-                content = await file.read()
-                await f.write(content)
+                while True:
+                    chunk = await file.read(1024 * 1024)  # 1 MiB
+                    if not chunk:
+                        break
+                    content += chunk
+                    await f.write(chunk)
 
             # Parse file (run in thread pool - CPU-bound, can take 30+ sec for large .bin)
             loop = asyncio.get_running_loop()
@@ -129,6 +139,22 @@ class ChatController:
                 ),
                 parsed_messages=parsed_messages,
             )
+        except OSError as e:
+            # Broken pipe (32) / Connection reset (104): client closed connection before we finished
+            err = getattr(e, "errno", None)
+            if err == 32 or err == 104:
+                msg = (
+                    "Connection closed before upload/parsing finished. "
+                    "Try again and leave the page open for 2–5 min for large files."
+                )
+            else:
+                msg = str(e)
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+            raise HTTPException(status_code=400, detail=f"Upload or parsing failed: {msg}")
         except Exception as e:
             # Clean up file on failure
             if os.path.exists(file_path):

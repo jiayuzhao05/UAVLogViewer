@@ -81,10 +81,9 @@ class ChatController:
                 detail="Only .bin or .tlog MAVLink flight log files are supported",
             )
         
-        # keep original extension so pymavlink picks correct parser (.tlog vs .bin)
-        ext = ".bin" if fn.endswith(".bin") else ".tlog"
+        # generate file ID
         file_id = str(uuid.uuid4())
-        file_path = os.path.join(self.upload_dir, f"{file_id}{ext}")
+        file_path = os.path.join(self.upload_dir, f"{file_id}.bin")
         content = b""
 
         try:
